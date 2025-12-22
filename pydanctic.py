@@ -10,7 +10,7 @@ class Vibe(str, Enum):
     NIGHTLIFE = "nightlife"
     NATURE = "nature"
     FOOD = "food"
-
+ 
 class DateRange(BaseModel):
     start_date: date = Field(..., alias="startDate")
     end_date: date = Field(..., alias="endDate")
