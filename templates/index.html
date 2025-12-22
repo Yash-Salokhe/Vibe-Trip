@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripMuse - Travel Planner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="landing-page" class="landing-page">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-sparkles"></i>
+                    <span>TripMuse</span>
+                </div>
+                <nav>
+                    <button>Explore</button>
+                    <button>About</button>
+                    <button>Contact</button>
+                </nav>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="left-section">
+                <h1>Plan Your Perfect <span class="gradient-text">Adventure</span></h1>
+                <p>Tell us where you want to go, your travel dates, and what vibe you're after. Our AI travel companion will create the perfect itinerary for you.</p>
+                
+                <div class="features">
+                    <p>✨ Features</p>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-dot"></div>
+                            <p>AI-powered personalized itineraries</p>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-dot"></div>
+                            <p>Chat with your personal trip bot</p>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-dot"></div>
+                            <p>Discover hidden gems by vibe</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-card">
+                    <h3>Start Planning</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-pin"></i>
+                            Where to?
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="location-input" 
+                                class="form-input" 
+                                placeholder="Start typing a city (min. 3 letters)..."
+                                autocomplete="off"
+                            >
+                            <div id="suggestions-list" class="suggestions-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-calendar"></i>
+                            When are you traveling?
+                        </label>
+                        <div class="relative">
+                            <button id="date-button" class="calendar-button">Select check-in and check-out dates</button>
+                            <div id="calendar-popup" class="calendar-popup">
+                                <div class="calendar-header">
+                                    <button id="prev-month" type="button">&larr;</button>
+                                    <h3 id="calendar-month"></h3>
+                                    <button id="next-month" type="button">&rarr;</button>
+                                </div>
+                                <div class="calendar-weekdays">
+                                    <div class="weekday">Sun</div><div class="weekday">Mon</div>
+                                    <div class="weekday">Tue</div><div class="weekday">Wed</div>
+                                    <div class="weekday">Thu</div><div class="weekday">Fri</div>
+                                    <div class="weekday">Sat</div>
+                                </div>
+                                <div id="calendar-days" class="calendar-days"></div>
+                                <button id="calendar-confirm" class="calendar-confirm" style="display: none;">
+                                    <i class="fas fa-check"></i> Confirm Dates
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-sparkles"></i>
+                            What's your vibe?
+                        </label>
+                        <div class="vibe-selector" id="vibe-selector"></div>
+                    </div>
+
+                    <button id="start-btn" class="cta-button">Start Planning →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        const state = {
+            location: '',
+            selectedDates: { start: null, end: null },
+            selectedVibes: [],
+            currentMonth: new Date()
+        };
+
+        // DOM Elements
+        const locationInput = document.getElementById('location-input');
+        const suggestionsList = document.getElementById('suggestions-list');
+        const dateButton = document.getElementById('date-button');
+        const calendarPopup = document.getElementById('calendar-popup');
+        const calendarDays = document.getElementById('calendar-days');
+        const calendarMonth = document.getElementById('calendar-month');
+        const calendarConfirm = document.getElementById('calendar-confirm');
+        const vibeSelector = document.getElementById('vibe-selector');
+        const startBtn = document.getElementById('start-btn');
+
+        const mockLocations = {
+            'bar': ['Barcelona', 'Bangkok', 'Bali', 'Barbados'],
+            'par': ['Paris', 'Patagonia', 'Prague'],
+            'rom': ['Rome', 'Romania', 'Rotterdam'],
+            'tok': ['Tokyo', 'Toronto', 'Tulum'],
+            'lon': ['London', 'Los Angeles'],
+            'ber': ['Berlin', 'Bermuda']
+        };
+
+        const vibes = [
+            'Historic & Cultural', 'Nature & Outdoors', 'Nightlife & Entertainment',
+            'Beach & Relaxation', 'Adventure & Activities', 'Food & Wine',
+            'Art & Architecture', 'Urban Exploration'
+        ];
+
+        // --- Location Suggestions ---
+        locationInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            state.location = value;
+            
+            if (value.length >= 3) {
+                const lower = value.toLowerCase().substring(0, 3);
+                let suggestions = mockLocations[lower] || [];
+                
+                suggestionsList.innerHTML = suggestions
+                    .map(city => `<button class="suggestion-item">${city}</button>`)
+                    .join('');
+                suggestionsList.classList.add('show');
+
+                document.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        state.location = item.textContent;
+                        locationInput.value = item.textContent;
+                        suggestionsList.classList.remove('show');
+                    });
+                });
+            } else {
+                suggestionsList.classList.remove('show');
+            }
+        });
+
+        // --- Calendar Logic ---
+        function renderCalendar() {
+            calendarMonth.textContent = state.currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const daysInMonth = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth() + 1, 0).getDate();
+            const firstDay = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth(), 1).getDay();
+            
+            calendarDays.innerHTML = '';
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                calendarDays.appendChild(empty);
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const button = document.createElement('button');
+                button.textContent = day;
+                button.className = 'calendar-day';
+                button.type = 'button';
+                
+                const dateObj = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth(), day);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                if (dateObj.toDateString() === today.toDateString()) button.classList.add('today');
+                
+                if (state.selectedDates.start && state.selectedDates.end) {
+                    if (dateObj >= state.selectedDates.start && dateObj <= state.selectedDates.end) {
+                        button.classList.add('between');
+                    }
+                }
+                
+                if (state.selectedDates.start?.toDateString() === dateObj.toDateString() || 
+                    state.selectedDates.end?.toDateString() === dateObj.toDateString()) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!state.selectedDates.start || (state.selectedDates.start && state.selectedDates.end)) {
+                        state.selectedDates.start = dateObj;
+                        state.selectedDates.end = null;
+                    } else if (dateObj > state.selectedDates.start) {
+                        state.selectedDates.end = dateObj;
+                    } else {
+                        state.selectedDates.start = dateObj;
+                    }
+                    renderCalendar();
+                    updateDateButton();
+                    calendarConfirm.style.display = state.selectedDates.start && state.selectedDates.end ? 'block' : 'none';
+                });
+                calendarDays.appendChild(button);
+            }
+        }
+
+        function updateDateButton() {
+            if (state.selectedDates.start && state.selectedDates.end) {
+                const start = state.selectedDates.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const end = state.selectedDates.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const days = Math.floor((state.selectedDates.end - state.selectedDates.start) / (1000 * 60 * 60 * 24)) + 1;
+                dateButton.textContent = `${start} - ${end} (${days} days)`;
+            } else if (state.selectedDates.start) {
+                const start = state.selectedDates.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                dateButton.textContent = `${start} - Select end date`;
+            } else {
+                dateButton.textContent = 'Select check-in and check-out dates';
+            }
+        }
+
+        dateButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            calendarPopup.classList.toggle('show');
+            if (calendarPopup.classList.contains('show')) renderCalendar();
+        });
+
+        calendarPopup.addEventListener('click', (e) => e.stopPropagation());
+
+        document.getElementById('prev-month').addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month').addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
+            renderCalendar();
+        });
+
+        calendarConfirm.addEventListener('click', () => calendarPopup.classList.remove('show'));
+
+        // --- Vibe Selection ---
+        vibeSelector.innerHTML = vibes
+            .map(v => `<button class="vibe-button" data-vibe="${v}">${v}</button>`)
+            .join('');
+
+        document.querySelectorAll('.vibe-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const vibe = btn.getAttribute('data-vibe');
+                if (state.selectedVibes.includes(vibe)) {
+                    state.selectedVibes = state.selectedVibes.filter(v => v !== vibe);
+                    btn.classList.remove('selected');
+                } else {
+                    state.selectedVibes.push(vibe);
+                    btn.classList.add('selected');
+                }
+            });
+        });
+
+        // --- Final Redirect Logic ---
+        startBtn.addEventListener('click', () => {
+            if (state.location && state.selectedDates.start && state.selectedDates.end && state.selectedVibes.length > 0) {
+                const days = Math.floor((state.selectedDates.end - state.selectedDates.start) / (1000 * 60 * 60 * 24)) + 1;
+                const params = new URLSearchParams({
+                    location: state.location,
+                    days: days,
+                    start: state.selectedDates.start.toISOString().split('T')[0],
+                    end: state.selectedDates.end.toISOString().split('T')[0],
+                    vibes: state.selectedVibes.join(',')
+                });
+                window.location.href = `/itinerary?${params.toString()}`;
+            } else {
+                alert("Please fill in all fields to start your adventure!");
+            }
+        });
+
+        // Global Close
+        document.addEventListener('click', () => {
+            calendarPopup.classList.remove('show');
+            suggestionsList.classList.remove('show');
+        });
+    </script>
+</body>
+</html>

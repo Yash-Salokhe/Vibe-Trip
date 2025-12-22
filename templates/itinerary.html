@@ -1,0 +1,117 @@
+<!-- Trip Planning Page -->
+    <div id="trip-page" class="trip-page hidden">
+        <header>
+            <div class="header-content">
+                <button id="back-btn" class="logo" style="background: none; border: none; cursor: pointer; color: inherit;">
+                    <i class="fas fa-sparkles"></i>
+                    <span>TripMuse</span>
+                </button>
+                <div style="text-align: center;">
+                    <h2 id="trip-location" style="margin: 0; font-weight: 600; color: #111827;"></h2>
+                    <p id="trip-info" style="margin: 0; font-size: 0.875rem; color: #6b7280;"></p>
+                </div>
+                <button id="new-trip-btn" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background: #dbeafe; border: none; cursor: pointer; font-size: 0.875rem; color: #111827; font-weight: 500;">New Trip</button>
+            </div>
+        </header>
+
+        <div class="trip-main">
+            <div class="trip-left">
+                <div class="trip-details-card">
+                    <h3>Trip Details</h3>
+                    <div class="trip-detail">
+                        <div class="trip-detail-label">Location</div>
+                        <div class="trip-detail-value" id="detail-location"></div>
+                    </div>
+                    <div class="trip-detail">
+                        <div class="trip-detail-label">Duration</div>
+                        <div class="trip-detail-value" id="detail-duration"></div>
+                    </div>
+                    <div class="trip-detail">
+                        <div class="trip-detail-label">Dates</div>
+                        <div class="trip-detail-value" id="detail-dates"></div>
+                    </div>
+                    <div class="trip-detail">
+                        <div class="trip-detail-label">Vibes</div>
+                        <div class="vibes-tags" id="detail-vibes"></div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <h3>Quick Tips</h3>
+                    <div class="tips-list">
+                        <div class="tip-item">
+                            <span class="tip-bullet">•</span>
+                            <span>Ask about specific activities</span>
+                        </div>
+                        <div class="tip-item">
+                            <span class="tip-bullet">•</span>
+                            <span>Get accommodation advice</span>
+                        </div>
+                        <div class="tip-item">
+                            <span class="tip-bullet">•</span>
+                            <span>Request day-by-day plans</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trip-right">
+                <div class="chat-messages" id="chat-messages"></div>
+                <div class="chat-input-area">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        class="chat-input" 
+                        placeholder="Ask..."
+                        autocomplete="off"
+                    >
+                    <button id="chat-send" class="chat-send">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+<script>
+    // 1. Setup the page logic when it loads
+    window.onload = async () => {
+        const params = new URLSearchParams(window.location.search);
+        
+        const tripData = {
+            location: params.get('location'),
+            days: params.get('days'),
+            start: params.get('start'),
+            end: params.get('end'),
+            vibes: params.get('vibes') ? params.get('vibes').split(',') : []
+        };
+
+        // 2. Fill the visual labels
+        document.getElementById('trip-location').textContent = tripData.location;
+        document.getElementById('detail-location').textContent = tripData.location;
+        document.getElementById('detail-duration').textContent = `${tripData.days} Days`;
+        document.getElementById('detail-dates').textContent = `${tripData.start} to ${tripData.end}`;
+        document.getElementById('detail-vibes').innerHTML = tripData.vibes.map(v => `<span class="vibe-tag">${v}</span>`).join(' ');
+
+        // 3. Call your API to get the AI response
+        const chatBox = document.getElementById('chat-messages');
+        chatBox.innerHTML = '<div class="message bot"><div class="message-bubble">Consulting the muse...</div></div>';
+
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(tripData)
+            });
+            const result = await response.json();
+            chatBox.innerHTML = `<div class="message bot"><div class="message-bubble">${result.itinerary}</div></div>`;
+        } catch (e) {
+            chatBox.innerHTML = `<div class="message bot"><div class="message-bubble">Oops! Something went wrong.</div></div>`;
+        }
+    };
+
+    // 4. Make the "New Trip" and "Back" buttons work
+    document.getElementById('back-btn').onclick = () => window.location.href = '/';
+    document.getElementById('new-trip-btn').onclick = () => window.location.href = '/';
+</script>
+    
