@@ -256,7 +256,7 @@
             e.stopPropagation();
             state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
             renderCalendar();
-        });
+        }); 
 
         calendarConfirm.addEventListener('click', () => calendarPopup.classList.remove('show'));
 
