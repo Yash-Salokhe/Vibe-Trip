@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TripMuse - Travel Planner</title>
+    <title>VibeTrip - Your Travel Planner</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -13,7 +13,7 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fas fa-sparkles"></i>
-                    <span>TripMuse</span>
+                    <span>VibeTrip</span>
                 </div>
                 <nav>
                     <button>Explore</button>
@@ -61,8 +61,9 @@
                                 type="text" 
                                 id="location-input" 
                                 class="form-input" 
-                                placeholder="Start typing a city (min. 3 letters)..."
+                                placeholder="Search for a city..."
                                 autocomplete="off"
+                                data-cities='{{ cities | tojson }}'
                             >
                             <div id="suggestions-list" class="suggestions-list"></div>
                         </div>
@@ -110,15 +111,12 @@
     </div>
 
     <script>
-        // State Management
         const state = {
             location: '',
             selectedDates: { start: null, end: null },
             selectedVibes: [],
             currentMonth: new Date()
         };
-
-        // DOM Elements
         const locationInput = document.getElementById('location-input');
         const suggestionsList = document.getElementById('suggestions-list');
         const dateButton = document.getElementById('date-button');
@@ -128,32 +126,27 @@
         const calendarConfirm = document.getElementById('calendar-confirm');
         const vibeSelector = document.getElementById('vibe-selector');
         const startBtn = document.getElementById('start-btn');
+        const allCities = JSON.parse(locationInput.getAttribute('data-cities') || "[]");
 
-        const mockLocations = {
-            'bar': ['Barcelona', 'Bangkok', 'Bali', 'Barbados'],
-            'par': ['Paris', 'Patagonia', 'Prague'],
-            'rom': ['Rome', 'Romania', 'Rotterdam'],
-            'tok': ['Tokyo', 'Toronto', 'Tulum'],
-            'lon': ['London', 'Los Angeles'],
-            'ber': ['Berlin', 'Bermuda']
-        };
-
-        const vibes = [
-            'Historic & Cultural', 'Nature & Outdoors', 'Nightlife & Entertainment',
-            'Beach & Relaxation', 'Adventure & Activities', 'Food & Wine',
-            'Art & Architecture', 'Urban Exploration'
+        const vibeConfig = [
+            { display: 'Historic & Cultural', key: 'vibe_historic_cultural' },
+            { display: 'Nature & Outdoors', key: 'vibe_nature_outdoors' },
+            { display: 'Nightlife & Entertainment', key: 'vibe_nightlife_entertainment' },
+            { display: 'Art & Architecture', key: 'vibe_art_architecture' },
+            { display: 'Urban Exploration', key: 'vibe_urban_exploration' },
+            { display: 'Adventure', key: 'vibe_adventure_activities' }
         ];
 
-        // --- Location Suggestions ---
         locationInput.addEventListener('input', (e) => {
-            const value = e.target.value;
+            const value = e.target.value.toLowerCase();
             state.location = value;
             
-            if (value.length >= 3) {
-                const lower = value.toLowerCase().substring(0, 3);
-                let suggestions = mockLocations[lower] || [];
+            if (value.length >= 2) {
+                const filtered = allCities.filter(city => 
+                    city.toLowerCase().includes(value)
+                ).slice(0, 8);
                 
-                suggestionsList.innerHTML = suggestions
+                suggestionsList.innerHTML = filtered
                     .map(city => `<button class="suggestion-item">${city}</button>`)
                     .join('');
                 suggestionsList.classList.add('show');
@@ -171,7 +164,6 @@
             }
         });
 
-        // --- Calendar Logic ---
         function renderCalendar() {
             calendarMonth.textContent = state.currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
             const daysInMonth = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth() + 1, 0).getDate();
@@ -260,42 +252,43 @@
 
         calendarConfirm.addEventListener('click', () => calendarPopup.classList.remove('show'));
 
-        // --- Vibe Selection ---
-        vibeSelector.innerHTML = vibes
-            .map(v => `<button class="vibe-button" data-vibe="${v}">${v}</button>`)
+        vibeSelector.innerHTML = vibeConfig
+            .map(v => `<button class="vibe-button" data-vibe-key="${v.key}">${v.display}</button>`)
             .join('');
 
         document.querySelectorAll('.vibe-button').forEach(btn => {
             btn.addEventListener('click', () => {
-                const vibe = btn.getAttribute('data-vibe');
-                if (state.selectedVibes.includes(vibe)) {
-                    state.selectedVibes = state.selectedVibes.filter(v => v !== vibe);
+                const vibeKey = btn.getAttribute('data-vibe-key');
+                if (state.selectedVibes.includes(vibeKey)) {
+                    state.selectedVibes = state.selectedVibes.filter(v => v !== vibeKey);
                     btn.classList.remove('selected');
                 } else { 
-                    state.selectedVibes.push(vibe);
+                    state.selectedVibes.push(vibeKey);
                     btn.classList.add('selected');
                 }
             });
         });
 
-        // --- Final Redirect Logic ---
         startBtn.addEventListener('click', () => {
-            if (state.location && state.selectedDates.start && state.selectedDates.end && state.selectedVibes.length > 0) {
+            const isValidCity = allCities.includes(state.location);
+
+            if (isValidCity && state.selectedDates.start && state.selectedDates.end && state.selectedVibes.length > 0) {
                 const days = Math.floor((state.selectedDates.end - state.selectedDates.start) / (1000 * 60 * 60 * 24)) + 1;
                 const params = new URLSearchParams({
                     location: state.location,
                     days: days,
                     start: state.selectedDates.start.toISOString().split('T')[0],
                     end: state.selectedDates.end.toISOString().split('T')[0],
-                    vibes: state.selectedVibes.join(',')
+                    vibes: state.selectedVibes.join(',') 
                 });
                 window.location.href = `/itinerary?${params.toString()}`;
+            } else if (!isValidCity) {
+                alert("Please select a city from the suggestion list.");
             } else {
                 alert("Please fill in all fields to start your adventure!");
             }
         });
 
-        // Global Close
         document.addEventListener('click', () => {
             calendarPopup.classList.remove('show');
             suggestionsList.classList.remove('show');

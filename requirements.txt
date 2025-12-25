@@ -1,7 +1,11 @@
+fastapi
+uvicorn
+jinja2
 pandas
 numpy
-ipykernel
-seaborn
 scikit-learn
-fastapi
-jinja2
+pymongo
+motor
+dnspython
+python-dotenv
+openai

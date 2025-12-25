@@ -623,6 +623,26 @@
             transition: background 0.3s;
         }
 
+        .chat-pane { 
+    background: white; 
+    border-left: 1px solid #e2e8f0; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; /* Ensure the pane takes full height */
+    overflow: hidden; /* Prevent the entire pane from scrolling */
+}
+
+#chat-box { 
+    flex: 1; /* Take up all available space between header and input */
+    overflow-y: scroll; /* Force the scrollbar to appear when content overflows */
+    padding: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+    background: #ffffff;
+    scroll-behavior: smooth;
+}
+
         .chat-send:hover {
             background: #2563eb;
         }
